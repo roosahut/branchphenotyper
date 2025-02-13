@@ -50,6 +50,11 @@ const ImageUploader: React.FC = () => {
     }
   };
 
+  const handleDelete = () => {
+    setImage(null);
+    setPreview(null);
+  };
+
   return (
     <div className="upload-container">
       <div
@@ -71,7 +76,14 @@ const ImageUploader: React.FC = () => {
           className="file-input"
         />
       </div>
-      {preview && <img src={preview} alt="Preview" className="preview" />}
+      {preview && (
+        <div className="image-preview-container">
+          <img src={preview} alt="Preview" className="preview" />
+          <button onClick={handleDelete} className="delete-button">
+            Delete
+          </button>
+        </div>
+      )}
       {image && (
         <button
           onClick={handleUpload}

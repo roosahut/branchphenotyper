@@ -20,7 +20,6 @@
   border-radius: 10px;
   text-align: center;
   color: white;
-  cursor: pointer;
   transition: background 0.3s ease;
   max-width: 500px;
 }
@@ -33,6 +32,15 @@
   background-color: rgba(39, 174, 96, 0.2);
 }
 
+.image-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  text-align: center;
+  width: 100%;
+}
+
 .preview {
   width: 100%;
   max-width: 400px;
@@ -42,18 +50,33 @@
 }
 
 .file-input {
-  display: none; /* Hide the actual file input */
+  display: none;
 }
 
 .file-upload-label {
-  background-color: #27ae60; /* Leaf green */
+  background-color: #27ae60;
   color: white;
-  padding: 8px 16px; /* Reduced padding */
+  padding: 8px 16px;
   border-radius: 5px;
-  font-size: 14px; /* Smaller font size */
+  font-size: 14px;
   cursor: pointer;
   transition: background 0.3s ease;
-  margin-top: 10px; /* Ensure some space above */
+  margin-top: 10px;
+}
+
+.delete-button {
+  background-color: #e74c3c;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
 }
 
 .upload-button {
