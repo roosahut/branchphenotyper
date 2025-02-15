@@ -7,9 +7,13 @@ const ImageUploader: React.FC = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [uploadResponse, setUploadResponse] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleImageChange = (file: File) => {
     setImage(file);
+    setUploadResponse(null);
+    setErrorMessage(null);
     setPreview(URL.createObjectURL(file));
   };
 
@@ -41,10 +45,11 @@ const ImageUploader: React.FC = () => {
     setUploading(true);
     try {
       const response = await uploadImage(image);
-      alert("Image uploaded successfully!");
-      console.log("Response:", response);
+      setUploadResponse(`${response.message} (File: ${response.filename})`);
+      setImage(null);
+      setPreview(null);
     } catch (error) {
-      alert("The connection with backend is not yet built - " + error);
+      setErrorMessage("Failed to upload the image - " + error);
     } finally {
       setUploading(false);
     }
@@ -93,6 +98,8 @@ const ImageUploader: React.FC = () => {
           {uploading ? "Uploading..." : "Upload Image"}
         </button>
       )}
+      {uploadResponse && <p className="success-message">{uploadResponse}</p>}
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
     </div>
   );
 };
