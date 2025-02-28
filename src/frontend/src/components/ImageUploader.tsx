@@ -1,25 +1,29 @@
 import React, { useState } from "react";
-import { uploadImage } from "../services/routes";
+import { uploadImages } from "../services/routes";
 import "./ImageUploader.css";
 
 const ImageUploader: React.FC = () => {
-  const [image, setImage] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [uploadResponse, setUploadResponse] = useState<string | null>(null);
+  const [uploadResponses, setUploadResponses] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleImageChange = (file: File) => {
-    setImage(file);
-    setUploadResponse(null);
+  const handleImageChange = (files: FileList) => {
+    const fileArray = Array.from(files);
+    setImages((prev) => [...prev, ...fileArray]);
+    setUploadResponses([]);
     setErrorMessage(null);
-    setPreview(URL.createObjectURL(file));
+    setPreviews((prev) => [
+      ...prev,
+      ...fileArray.map((file) => URL.createObjectURL(file)),
+    ]);
   };
 
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      handleImageChange(event.target.files[0]);
+    if (event.target.files) {
+      handleImageChange(event.target.files);
     }
   };
 
@@ -35,19 +39,23 @@ const ImageUploader: React.FC = () => {
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setDragActive(false);
-    if (event.dataTransfer.files && event.dataTransfer.files[0]) {
-      handleImageChange(event.dataTransfer.files[0]);
+    if (event.dataTransfer.files) {
+      handleImageChange(event.dataTransfer.files);
     }
   };
 
   const handleUpload = async () => {
-    if (!image) return;
+    if (images.length === 0) return;
     setUploading(true);
     try {
-      const response = await uploadImage(image);
-      setUploadResponse(`${response.message} (File: ${response.filename})`);
-      setImage(null);
-      setPreview(null);
+      const responses = await uploadImages(images);
+      setUploadResponses(
+        responses.map(
+          (response) => `${response.message} (File: ${response.filename})`
+        )
+      );
+      setImages([]);
+      setPreviews([]);
     } catch (error) {
       setErrorMessage("Failed to upload the image - " + error);
     } finally {
@@ -55,9 +63,9 @@ const ImageUploader: React.FC = () => {
     }
   };
 
-  const handleDelete = () => {
-    setImage(null);
-    setPreview(null);
+  const handleDelete = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -81,24 +89,38 @@ const ImageUploader: React.FC = () => {
           className="file-input"
         />
       </div>
-      {preview && (
+      {previews.length > 0 && (
         <div className="image-preview-container">
-          <img src={preview} alt="Preview" className="preview" />
-          <button onClick={handleDelete} className="delete-button">
-            Delete
-          </button>
+          {previews.map((preview, index) => (
+            <div key={index} className="image-preview">
+              <img src={preview} alt={`Preview ${index}`} className="preview" />
+              <button
+                onClick={() => handleDelete(index)}
+                className="delete-button"
+              >
+                Delete
+              </button>
+            </div>
+          ))}
         </div>
       )}
-      {image && (
+
+      {images && (
         <button
           onClick={handleUpload}
           className="upload-button"
           disabled={uploading}
         >
-          {uploading ? "Uploading..." : "Upload Image"}
+          {uploading ? "Uploading..." : "Upload images"}
         </button>
       )}
-      {uploadResponse && <p className="success-message">{uploadResponse}</p>}
+      {uploadResponses.length > 0 && (
+        <div className="success-message">
+          {uploadResponses.map((response, index) => (
+            <p key={index}>{response}</p>
+          ))}
+        </div>
+      )}
       {errorMessage && <p className="error-message">{errorMessage}</p>}
     </div>
   );

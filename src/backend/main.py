@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import shutil
 import uvicorn
+from typing import List
 
 app = FastAPI()
 
@@ -23,16 +24,19 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.post('/api/upload')
-async def upload_image(file: UploadFile = File(...)):
-    try:
-        file_path = os.path.join(UPLOAD_DIR, file.filename)
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+async def upload_images(images: List[UploadFile] = File(...)):
+    uploaded_images = []
 
-        return {"message": "File uploaded successfully!", "filename": file.filename}
-    
-    except Exception as e:
-        return {"error": str(e)}
+    for image in images:
+        file_path = os.path.join(UPLOAD_DIR, image.filename)
+        try:
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+            uploaded_images.append({"message": "File uploaded successfully!", "filename": image.filename})
+        except Exception as e:
+            uploaded_images.append({"error": str(e), "filename": image.filename})
+
+    return uploaded_images
     
 
 
