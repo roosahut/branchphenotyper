@@ -1,0 +1,52 @@
+.predictions-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  box-sizing: border-box;
+}
+
+.predictions-container h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #27ae60;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.prediction-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.prediction-list .prediction-item {
+  flex: 1 1 calc(33.333% - 20px);
+  max-width: 240px;
+  box-sizing: border-box;
+}
+
+.csv-button {
+  background-color: #27ae60;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s ease;
+  font-family: "Lucida console", monospace;
+}
+
+.csv-button:hover {
+  background-color: #218c54;
+}
+
+.csv-button:active {
+  background-color: #1d7c4c;
+}

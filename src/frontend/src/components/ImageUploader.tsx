@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { uploadImages } from "../services/routes";
 import "./ImageUploader.css";
+import Predictions, { UploadResponse } from "./Predictions";
 
 const ImageUploader: React.FC = () => {
   const [images, setImages] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [uploadResponses, setUploadResponses] = useState<string[]>([]);
+  const [uploadResponses, setUploadResponses] = useState<UploadResponse[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleImageChange = (files: FileList) => {
@@ -15,10 +15,6 @@ const ImageUploader: React.FC = () => {
     setImages((prev) => [...prev, ...fileArray]);
     setUploadResponses([]);
     setErrorMessage(null);
-    setPreviews((prev) => [
-      ...prev,
-      ...fileArray.map((file) => URL.createObjectURL(file)),
-    ]);
   };
 
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,22 +45,10 @@ const ImageUploader: React.FC = () => {
     setUploading(true);
     try {
       const responses = await uploadImages(images);
-      setUploadResponses(
-        responses.map((response) => {
-          if (response.predictions) {
-            const predictionText = Object.entries(response.predictions)
-              .map(([key, value]) => `${key}: ${value.toFixed(2)}`)
-              .join(", ");
-            return `File: ${response.filename} - Predictions: ${predictionText}`;
-          } else {
-            return `File: ${response.filename} - Error: ${response.error}`;
-          }
-        })
-      );
+      setUploadResponses(responses);
       setImages([]);
-      setPreviews([]);
     } catch (error) {
-      setErrorMessage("Failed to upload the image - " + error);
+      setErrorMessage("Failed to upload the images - " + error);
     } finally {
       setUploading(false);
     }
@@ -72,7 +56,6 @@ const ImageUploader: React.FC = () => {
 
   const handleDelete = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
-    setPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -96,23 +79,24 @@ const ImageUploader: React.FC = () => {
           className="file-input"
         />
       </div>
-      {previews.length > 0 && (
-        <div className="image-preview-container">
-          {previews.map((preview, index) => (
-            <div key={index} className="image-preview">
-              <img src={preview} alt={`Preview ${index}`} className="preview" />
-              <button
-                onClick={() => handleDelete(index)}
-                className="delete-button"
-              >
-                Delete
-              </button>
-            </div>
-          ))}
+      {images.length > 0 && (
+        <div className="image-list-container">
+          <ul className="image-list">
+            {images.map((image, index) => (
+              <li key={index} className="image-list-item">
+                {image.name}
+                <button
+                  onClick={() => handleDelete(index)}
+                  className="delete-button"
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
-
-      {images && (
+      {images.length > 0 && (
         <button
           onClick={handleUpload}
           className="upload-button"
@@ -122,11 +106,7 @@ const ImageUploader: React.FC = () => {
         </button>
       )}
       {uploadResponses.length > 0 && (
-        <div className="success-message">
-          {uploadResponses.map((response, index) => (
-            <p key={index}>{response}</p>
-          ))}
-        </div>
+        <Predictions uploadResponses={uploadResponses} />
       )}
       {errorMessage && <p className="error-message">{errorMessage}</p>}
     </div>
