@@ -1,5 +1,12 @@
 import axios from "axios";
 
+export interface UploadResponse {
+  prediction?: number;
+  message?: string;
+  filename?: string;
+  error?: string;
+}
+
 export const uploadImages = async (images: File[]) => {
   try {
     const formData = new FormData();
@@ -16,9 +23,3 @@ export const uploadImages = async (images: File[]) => {
     throw error;
   }
 };
-
-export interface UploadResponse {
-  message?: string;
-  filename?: string;
-  error?: string;
-}

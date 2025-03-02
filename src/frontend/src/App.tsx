@@ -7,7 +7,7 @@ const App: React.FC = () => {
     <div className="app-container">
       <h1 className="title">Branchphenotyper</h1>
       <p className="subtitle">
-        Upload an image of a birch to analyze tree branches!
+        Upload images of birches to analyze tree branches!
       </p>
       <ImageUploader />
     </div>

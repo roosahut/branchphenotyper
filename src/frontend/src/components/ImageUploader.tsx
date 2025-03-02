@@ -51,7 +51,8 @@ const ImageUploader: React.FC = () => {
       const responses = await uploadImages(images);
       setUploadResponses(
         responses.map(
-          (response) => `${response.message} (File: ${response.filename})`
+          (response) =>
+            `${response.message} (File: ${response.filename} - Prediction: ${response.prediction})`
         )
       );
       setImages([]);

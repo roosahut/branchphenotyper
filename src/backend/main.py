@@ -1,9 +1,13 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import os
-import shutil
+import io
+import numpy as np
+import tensorflow as tf
+from PIL import Image
 import uvicorn
 from typing import List
+from utils.preprocessing import preprocess_image
 
 app = FastAPI()
 
@@ -20,24 +24,38 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+MODEL_WEEPING_PATH = "../../models/model_weeping.keras"
+model = tf.keras.models.load_model(MODEL_WEEPING_PATH)
 
 @app.post('/api/upload')
 async def upload_images(images: List[UploadFile] = File(...)):
-    uploaded_images = []
+    results = []
 
     for image in images:
-        file_path = os.path.join(UPLOAD_DIR, image.filename)
         try:
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(image.file, buffer)
-            uploaded_images.append({"message": "File uploaded successfully!", "filename": image.filename})
-        except Exception as e:
-            uploaded_images.append({"error": str(e), "filename": image.filename})
+            contents = await image.read()
+            img = Image.open(io.BytesIO(contents))
 
-    return uploaded_images
-    
+            processed_img = preprocess_image(img)
+
+            prediction = model.predict(processed_img)
+            if prediction.ndim == 2 and prediction.shape[1] == 1:
+                predicted_value = prediction[0][0]
+            elif prediction.ndim == 1:
+                predicted_value = prediction[0]
+            else:
+                predicted_value = prediction
+
+            results.append({
+                "filename": image.filename,
+                "message": "File processed successfully!",
+                "prediction": float(predicted_value)
+            })
+
+        except Exception as e:
+            results.append({"filename": image.filename, "error": str(e)})
+
+    return results
 
 
 def start():
