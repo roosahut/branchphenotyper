@@ -1,9 +1,16 @@
 import axios from "axios";
 
 export interface UploadResponse {
-  prediction?: number;
-  message?: string;
-  filename?: string;
+  filename: string;
+  predictions?: {
+            weeping: number,
+            antigravitropic: number,
+            main_trunks: number,
+            canopy_breadth: number,
+            primary_branches: number,
+            branch_density: number,
+            orientation: number
+        }
   error?: string;
 }
 

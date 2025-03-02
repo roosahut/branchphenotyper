@@ -1,13 +1,11 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-import os
 import io
-import numpy as np
-import tensorflow as tf
 from PIL import Image
 import uvicorn
 from typing import List
 from utils.preprocessing import preprocess_image
+from utils.models import load_models, predict_with_models
 
 app = FastAPI()
 
@@ -24,8 +22,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-MODEL_WEEPING_PATH = "../../models/model_weeping.keras"
-model = tf.keras.models.load_model(MODEL_WEEPING_PATH)
+models = load_models()
 
 @app.post('/api/upload')
 async def upload_images(images: List[UploadFile] = File(...)):
@@ -35,21 +32,11 @@ async def upload_images(images: List[UploadFile] = File(...)):
         try:
             contents = await image.read()
             img = Image.open(io.BytesIO(contents))
-
             processed_img = preprocess_image(img)
-
-            prediction = model.predict(processed_img)
-            if prediction.ndim == 2 and prediction.shape[1] == 1:
-                predicted_value = prediction[0][0]
-            elif prediction.ndim == 1:
-                predicted_value = prediction[0]
-            else:
-                predicted_value = prediction
-
+            predictions = predict_with_models(models, processed_img)
             results.append({
                 "filename": image.filename,
-                "message": "File processed successfully!",
-                "prediction": float(predicted_value)
+                "predictions": predictions
             })
 
         except Exception as e:

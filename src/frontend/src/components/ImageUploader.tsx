@@ -50,10 +50,16 @@ const ImageUploader: React.FC = () => {
     try {
       const responses = await uploadImages(images);
       setUploadResponses(
-        responses.map(
-          (response) =>
-            `${response.message} (File: ${response.filename} - Prediction: ${response.prediction})`
-        )
+        responses.map((response) => {
+          if (response.predictions) {
+            const predictionText = Object.entries(response.predictions)
+              .map(([key, value]) => `${key}: ${value.toFixed(2)}`)
+              .join(", ");
+            return `File: ${response.filename} - Predictions: ${predictionText}`;
+          } else {
+            return `File: ${response.filename} - Error: ${response.error}`;
+          }
+        })
       );
       setImages([]);
       setPreviews([]);
