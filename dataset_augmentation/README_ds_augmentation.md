@@ -1,13 +1,13 @@
 # Dataset Augmentation Pipeline
 
-The dataset_augmentation folder contains functions to create and save new images from original images by python based image augmentation to increase the dataset size. It also contains functions to read, analyse and write excel sheets with image labelling information. Based on image labeling distribution, data augmentation pipelines in this folder can create more photos from rare image label types and label combinations to balance the dataset.
+The system dynamically augments images based on label combinations. It increases dataset size through baseline augmentation and balances label distribution by identifying rare label combinations using configurable rarity strategies (`fixed`, `percentile`, or `max`). Rare label types receive additional augmentations to create a balanced dataset.
 
-There are two primary modes that can be applied to either individual images or several images at a time:
+There are two ways of augmenting an image:
 
 * **Individual Augmentations:** Each image is processed with each individual transformation (e.g., rotate or flip or greyscaling to one photo). This is more for testing and exploration purposes.
 * **Combined Augmentations:** Each image is processed with a random chain of transformations (e.g., rotate and flip and greyscaling all done to one photo)
 
-Rare images (based on dataset selection) can be repeated in this process, leading to bigger amount of those types of images created.
+Rare images (based on dataset selection) are  repeated in this process, leading to bigger amount of those types of images created.
 
 ## File Structure
 
@@ -22,48 +22,87 @@ Rare images (based on dataset selection) can be repeated in this process, leadin
 
 ## Data Flow
 
-Use the main.py file to choose which augmentation pipeline you want to use and with what paremeters, but overall they all have this structure:
+Use the main.py file to choose which augmentation pipeline you want to use and with what paremeters. There are multiple entry points to different augmentation pipelines for testing and exploration purposes. But the main augmentation pipeline `run_combined_augmentation_with_balancing` used to balance and increase dataset size has this structure:
 
-1. Read excel: read the image names (file names) and labels from excel and put to pandas dataframe
-2. Dataset selection: choose the file nameswith the  rarest types of labels and rare combinations of labels based on label information in excel
-3. Image input: get the chosen (rare) or all of the original images from an assigned folder
-4. Image augmentation: based on pipeline chosen, apply either:
-   1. One type of augmentation to one or several images and save each image that has one type of augmentation
-   2. Randomly assign 2-n amount of augmentations to one or several images and save each images that has multiple augmentations
-5. New excel: create or update a new excel that contains the new names of augmented images and the original images' labels
+PHASE 1 — Baseline Dataset Expansion:
 
-## Usage
+- Reads original excel label file and filters to existing images
+- Applies a configurable number of augmentations to every image
+- Saves newly created images with a new name and saves their label information to a new augmentation excel
+- Logs stats like top label values, unique label combos, etc.
 
-See the main.py file in this folder for running the augmentations. Also there are helper functions to timing the execution time and for deleting augmented images locally for cleanup. 
+PHASE 2 — Label Balancing:
 
-Add all folder locations etc to config.py file
+- Reloads augmentation excel to get post-baseline label distributions
+- Determines underrepresented label combinations using one of:
+  - 'fixed': user-defined target value (e.g., 5), meaning each label combination must be generated to be present at least 5 times. Good for testing with a small dataset size
+  - 'percentile': bottom X% (e.g., 0.9 = bottom 10%) USE THIS MOSTLY, others for testing
+  - 'max': matches the most frequent combo THIS WILL TAKE A LONG TIME, and possible overfitting
+- Distributes needed augmentations for rare combinations across original images
+- Saves augmented images and updates augmented excel
+
+In the main.py file there are helper functions to timing the execution time and for deleting augmented images locally for cleanup.
+
+Add all folder locations etc to `config.py` file
+
+### Example Configuration (`config.py`)
+
+```python
+image_directory = "./images/original_images"  		# Path to original input images
+output_directory = "./images/augmented_images"  	# Output path for augmented images
+
+excel_file_path = "./labels/phenotype_labels.xlsx"  	# Path to original labels Excel
+augmented_excel_file_path = "./labels/augmented_images_phenotype_labels.xlsx"  # Path to augmented labels Excel
+sheet_name = "birch_labels_final"  			# Sheet containing label data
+augmented_sheet_name = "augmented_images_labels"	# Sheet containing augmented image label data
+
+num_augmented_images = 2              # Every image gets 2 new versions (baseline)
+target_count_strategy = "fixed"       # Balancing method
+target_value = 5                      # Make every label combo have at least 5 total images
+max_extra_aug_per_image = 4           # Cap per original image
+```
+
 - you should be able to run all the pipelines with the test images and excels that are here in this repository but for processing larger amounts of images, your laptop might not be able to handle it and doing that in a cloud based processing system might be easier.
 
+## Recommendations
+
+* For small datasets: use `fixed` strategy with `target_value = 5`
+* For medium datasets (~600): try `percentile` with `target_value = 0.8`
+* For production-ready balance: use `max` to fully equalize all label combinations
+
+### **Output Explanation:**
+
+The system creates:
+
+* Augmented images → saved to the output folder
+* Augmented label records → appended to `augmented_images_phenotype_labels.xlsx`
+* Log summaries → printed and saved to `label_analysis_log.txt`
+
+Each step logs label distributions (before and after), counts, and dataset growth metrics.
+
 ## Requirements
+
 install requirements file
 
 ```
 pip install -r requirements.txt
 ```
 
-that should install these dependencies: 
+that should install these dependencies:
 
 ```
 pillow
 pandas
 openpyxl
 opencv-python
+pylint
+black
 ```
+
 You also need python (should work at least with 3.8.10->)
 
 ### Unfinished things
 
-for local teting with a small number of images, threshold to selecting rare label combinations is hardcoded as 1 so it is considered rare if that combo of labels is present once or less, but the actual calulation works fine with a larger dataset, but running that is hard locally. So need to remeber to change this back at some point.
-
-counting the rare label values is unfinished, it was not working well enough so starting over with that one. 
-
 Do we want one unified excel with both augmented image labels and original labels? This is easy to do if decided so.
 
 Some combinations are too harsh, so adjusting parameters in augmentation functions needs fine tuning. Dont add channel shuffle and rgb in one? etc
-
-If trying to name two files the same name -> handle this error withouhg crashing
