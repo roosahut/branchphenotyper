@@ -67,6 +67,7 @@ const ImageUploader: React.FC = () => {
         onDrop={handleDrop}
       >
         <p>Drag & Drop an image here</p>
+        <p>(You can select multiple images)</p>
         <p>or</p>
         <label htmlFor="file-upload" className="file-upload-label">
           Choose File
@@ -75,6 +76,7 @@ const ImageUploader: React.FC = () => {
           id="file-upload"
           type="file"
           accept="image/*"
+          multiple
           onChange={handleFileInput}
           className="file-input"
         />
