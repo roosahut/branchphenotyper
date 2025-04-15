@@ -118,6 +118,28 @@ def delete_augmented_images_folder_contents():
         file_path = os.path.join(output_directory, filename)
         os.remove(file_path)
 
+def check_label_dist():
+    df = pd.read_excel(excel_file_path, sheet_name=sheet_name)
+    label_columns = [col for col in df.columns if col != "filename"]
+    combo_counts = df[label_columns].value_counts().reset_index(name="count")
+    print(combo_counts.head(30))
+    """for top 30 values in columns:
+    Combo rank	    Count	Notes
+    1st	            7	    Highest count
+    2nd	            6	    Common
+    3rd-4th	        5	    Reasonably frequent
+    5th-12th	    4	    Still fairly common
+    13th-29th	    3	    Majority in this range
+    --> most rare combos ar et 3 occurances or less -> anything below 4 can be considered rare
+
+    use in config:
+    target_count_strategy = "fixed"
+    target_value = 4 or 5
+    this is more conservative, catches about half of the data
+
+    can also use max or fixed with 6 or 7, more radical 
+    
+    """
 
 # RUN PIPELINES FROM HERE: UNCOMMENT WHICH PIPELINE YOU WANT TO RUN
 # put necessary parameters into config.py file
@@ -135,4 +157,5 @@ duration = end_time - start_time
 
 print(f"pipeline ran for {duration:.2f} seconds or {duration/60:.2f} minutes")
 
-# delete_augmented_images_folder_contents()
+#delete_augmented_images_folder_contents()
+
