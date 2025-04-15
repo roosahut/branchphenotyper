@@ -6,6 +6,7 @@ import uvicorn
 from typing import List
 from utils.preprocessing import preprocess_image
 from utils.models import load_models, predict_with_models
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
@@ -44,6 +45,8 @@ async def upload_images(images: List[UploadFile] = File(...)):
 
     return results
 
+app.mount('/', StaticFiles(directory='../frontend/dist/',
+          html=True), name='root')
 
 def start():
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
