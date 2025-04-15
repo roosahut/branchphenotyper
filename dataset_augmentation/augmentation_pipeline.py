@@ -21,6 +21,7 @@ from dataset_selection import (
     determine_target_count,
     get_augmentation_plan_by_combination_balanced,
     log_dataset_summary,
+    get_individual_label_augmentation_plan
 )
 from transformations import (
     flip_image,
@@ -60,7 +61,9 @@ def augmentation_for_image(image_path, output_directory, img_filename, df):
     """
     img = get_image(image_path)
     labels = read_excel_labels(img_filename, df)
-
+    if labels is None:
+        logger.warning(f"Skipping {img_filename} due to missing label.")
+        return
     transformations = {
         "flipped": flip_image(img),
         "rotated": rotate_image(img),
@@ -104,6 +107,9 @@ def combined_augmentation_for_image(
     """
     img = get_image(image_path)
     labels = read_excel_labels(img_filename, df)
+    if labels is None:
+        logger.warning(f"Skipping {img_filename} due to missing label.")
+        return
 
     available_transformations = {
         "flipped": flip_image,
@@ -276,3 +282,46 @@ def combined_augmentation_to_all_imgs_with_balancing(
     top_combos = combo_counts_final.head(5)
     logger.info("Top 5 most common label combinations:")
     logger.info("\n%s", top_combos.to_string(index=False))
+
+    """
+    logger.info("PHASE 3: Balancing based on individual label values...")
+    plan_df_individual = get_individual_label_augmentation_plan(
+        df_original=df,
+        df_augmented=final_df,
+        label_columns=label_columns,
+        max_extra_aug_per_image_individual=3,  # or pull from config
+    )
+
+    for row in plan_df_individual.itertuples():
+        logger.info(
+            f"[INDIVIDUAL] Augmenting {row.filename} ({row.augmentations_needed}) due to {row.reason}"
+        )
+        img_path = os.path.join(image_directory, row.filename)
+        for _ in range(row.augmentations_needed):
+            combined_augmentation_for_image(
+                img_path,
+                output_directory,
+                row.filename,
+                df,
+                num_augmented_images=1,
+            )
+
+    final_df = pd.read_excel(augmented_excel_file_path, sheet_name=augmented_sheet_name)
+    log_dataset_summary(final_df, label_columns, "Final after individual-label balancing")
+
+    original_count = df["filename"].nunique()
+    final_count = final_df["filename"].nunique()
+    new_images_created = final_count - original_count
+
+    logger.info(f"Total new images created (including individual label balancing): {new_images_created}")
+
+    growth_factor = final_count / original_count if original_count > 0 else 0
+    logger.info(f"Dataset growth after individual-label balancing: {growth_factor:.2f}x")
+
+    combo_counts_final = (
+        final_df[label_columns].value_counts().reset_index(name="count")
+    )
+    top_combos = combo_counts_final.head(5)
+    logger.info("Top 5 most common label combinations after individual-label balancing:")
+    logger.info("\n%s", top_combos.to_string(index=False))
+"""

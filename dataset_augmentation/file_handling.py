@@ -20,6 +20,9 @@ def save_image(img_name, img, output_directory, labels):
     full_path = os.path.join(output_directory, img_name)
     img.save(full_path)
     logger.info(f"Augmented image '{img_name}' saved.")
+    if labels is None:
+        logger.warning(f"Skipping save of {img_name} because labels are missing.")
+        return
     update_excel_with_labels(img_name, labels)
 
 

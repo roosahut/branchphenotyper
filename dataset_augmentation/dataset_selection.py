@@ -169,3 +169,49 @@ def get_augmentation_plan_by_combination_balanced(
         logger.info(plan_df.to_string(index=False))
 
     return plan_df
+
+
+import numpy as np
+
+def get_individual_label_augmentation_plan(
+    df_original,
+    df_augmented,
+    label_columns,
+    max_extra_aug_per_image_individual,
+):
+    """
+    For each label column, calculate how underrepresented each value is.
+    If there's a large gap between the max and current count, schedule extra augmentations.
+    """
+    plan_rows = []
+    for col in label_columns:
+        value_counts = df_augmented[col].value_counts()
+        max_count = value_counts.max()
+
+        for val, count in value_counts.items():
+            gap = max_count - count
+            if gap < 1:
+                continue
+
+            df_with_val = df_original[df_original[col] == val]
+            if df_with_val.empty:
+                continue
+
+            per_image = max(1, gap // len(df_with_val))
+            per_image = min(per_image, max_extra_aug_per_image_individual)
+
+            leftover = gap % len(df_with_val)
+            for i, row in enumerate(df_with_val.itertuples()):
+                aug_count = per_image + (1 if i < leftover else 0)
+                if aug_count > 0:
+                    plan_rows.append({
+                        "filename": row.filename,
+                        "augmentations_needed": aug_count,
+                        "reason": f"{col}={val}"
+                    })
+
+    plan_df = pd.DataFrame(plan_rows)
+    logger.info(f"Generated individual label augmentation plan with {len(plan_df)} entries.")
+    if not plan_df.empty:
+        logger.info(plan_df.groupby('reason').size().to_string())
+    return plan_df
