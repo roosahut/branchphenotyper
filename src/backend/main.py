@@ -45,7 +45,7 @@ async def upload_images(images: List[UploadFile] = File(...)):
 
     return results
 
-app.mount('/', StaticFiles(directory='../frontend/dist/',
+app.mount('/', StaticFiles(directory='dist',
           html=True), name='root')
 
 def start():

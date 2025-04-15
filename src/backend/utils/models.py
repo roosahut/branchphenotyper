@@ -1,7 +1,7 @@
 import os
 import tensorflow as tf
 
-MODEL_DIR = "../../models"
+MODEL_DIR = "/app/models"
 features = [
     "weeping", "antigravitropic", "main_trunks", "canopy_breadth",
     "primary_branches", "branch_density", "orientation"
