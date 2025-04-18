@@ -219,11 +219,11 @@ def combined_augmentation_to_all_imgs_with_balancing(
 
     logger.info("Calculating rarity and balancing targets with the given strategy...")
     target_count = determine_target_count(
-        df_aug,
+        df,
         label_columns,
         method=target_count_strategy,
         value=target_value,
-        baseline_augments_per_image=0,  # already included in df_aug
+        baseline_augments_per_image=num_augmented_images,  # already included in df_aug
     )
     logger.info(f"Target per label combination: {target_count}")
 

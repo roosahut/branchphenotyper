@@ -22,8 +22,8 @@ num_augmented_images = 1
 # - 'fixed': target_value is a fixed count (e.g., 3 means rare = < 3 occurrences of that label combination).
 # - 'percentile': target_value is the quantile cutoff (e.g., 0.9 = bottom 10% combos)
 # - 'max': target_value is not needed, this balances the entire dataset. Takes the max count of label combinations and creates max_count-1 amount of augmented images from the rest of the dataset. End result is balanced dataset.
-target_count_strategy = "fixed"
+target_count_strategy = "max"
 target_value = 5
 
 # Cap on how many extra images we generate for rare label combinations
-max_extra_aug_per_image = 4
+max_extra_aug_per_image = 7
